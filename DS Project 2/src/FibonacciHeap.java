@@ -10,6 +10,8 @@ public class FibonacciHeap
 {
 	public List<HeapNode> roots;//list of the roots of the trees in the heap
 	public HeapNode min;//pointer to the minimum node
+	public int size; //number of HeapNodes in the heap;
+	public int markedNodes; // number of marked nodes
 	
 	/**
 	 * constructor of the heap
@@ -18,6 +20,7 @@ public class FibonacciHeap
 	 */
 	public FibonacciHeap() {
 		this.roots = new ArrayList<>();
+		this.min = null;
 	}
 
    /**
@@ -51,6 +54,7 @@ public class FibonacciHeap
     			this.min = node;
     		}
     	}
+    	this.size++;
     	return node;
     }
 
@@ -92,11 +96,11 @@ public class FibonacciHeap
     * public int size()
     *
     * Return the number of elements in the heap
-    *   
+    * O(1)  
     */
     public int size()
     {
-    	return 0; // should be replaced by student code
+    	return this.size;
     }
     	
     /**
@@ -139,10 +143,11 @@ public class FibonacciHeap
     * This function returns the current potential of the heap, which is:
     * Potential = #trees + 2*#marked
     * The potential equals to the number of trees in the heap plus twice the number of marked nodes in the heap. 
+    * O(1);
     */
     public int potential() 
     {    
-    	return 0; // should be replaced by student code
+    	return (roots.size() + (2*this.markedNodes));
     }
 
    /**
@@ -192,12 +197,14 @@ public class FibonacciHeap
     public class HeapNode{
 
 	public int key; //node key
+	public int degree; // number of children
 	public boolean marked; //marks if the node lost a child
 	public HeapNode child, parent, left, right;//pointers to nodes neighbors
 
   	public HeapNode(int key) {
-  		//constructor' O(1)
+  		//constructor O(1)
 	    this.key = key;
+	    this.degree = 0;
 	    this.marked = false;
       }
 
@@ -222,6 +229,9 @@ public class FibonacciHeap
   	public boolean getMarked() {//O(1)
   		return this.marked;
   	}
+  	public int getDegree() {
+  		return this.degree;
+  	}
   	public void setChild(HeapNode node) {//O(1)
   		this.child = node;
   	}
@@ -236,6 +246,9 @@ public class FibonacciHeap
   	}
   	public void setMarked(boolean bool) {//O(1)
   		this.marked = bool;
+  	}
+  	public void setDegree(int k) {
+  		this.degree = k;
   	}
     }
 }
