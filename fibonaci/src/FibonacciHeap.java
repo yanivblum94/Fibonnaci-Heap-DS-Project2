@@ -78,6 +78,27 @@ public class FibonacciHeap
     	this.size++;
     	return node;
     }
+    
+    public static void merge_roots(HeapNode root1, HeapNode root2) {
+    	root1.left.right=root2;
+  	  HeapNode last2=root2.left;
+  	  root2.left=root1.left;
+  	  last2.right=root1;
+  	  root1.left=last2;
+    }
+    
+    public static void link(HeapNode parent,HeapNode child) {
+    	HeapNode original_child=parent.child;
+    	parent.child=child;
+    	child.parent=parent;
+    	while (original_child!=null) {
+    		merge_roots(child, original_child);
+    		original_child=original_child.child;
+    	}
+    	parent.rank++;
+    	
+    	
+    }
 
    /**
     * public void deleteMin()
@@ -87,7 +108,53 @@ public class FibonacciHeap
     */
     public void deleteMin()
     {
-     	return; // should be replaced by student code
+    	if (this.num_of_roots==0) {
+    		return;
+    	}
+    	if (this.num_of_roots==1) {
+    		this.first_root=null;
+    		this.min=null;
+    		this.size=0;
+    	}
+    	HeapNode min_child=min.child;
+    	if (this.first_root==this.min) {
+    		this.first_root=this.first_root.right;
+    	}
+    	min_child.parent=null;
+    	//hop over
+    	this.size--;
+    	merge_roots(this.first_root, min_child);
+    	HeapNode [] consol= new HeapNode [fib_heap_size(this.size())];
+    	HeapNode index=this.first_root;
+    	HeapNode cur;
+    	do {
+    		cur=index;
+    		while (consol[cur.rank]!=null) {
+    			link(cur,consol[cur.rank]);//correct take minimum
+    			consol[cur.rank]=null;
+    			this.total_links++;
+    		}
+    		consol[cur.rank]=cur;
+    		index=index.right;
+    	}while (index!=first_root);
+    	boolean first=true;
+    	for (int i=0;i<consol.length;i++) {
+    		if (consol[i]!=null) {
+    			if (first) {
+    				this.min=consol[i];
+    				this.first_root=consol[i];
+    				first=false;
+    				cur=consol[i];
+    			}
+    			else {
+    				if (consol[i].key<this.min.key) {
+    					this.min=consol[i];
+    				}
+    				cur.right=consol[i];
+    			}
+    		}
+    	}
+    	cur.right=this.first_root;
      	
     }
 
@@ -110,7 +177,7 @@ public class FibonacciHeap
     */
     public void meld (FibonacciHeap heap2)
     {
-    	  this.first_root.left=heap2.first_root;
+    	  this.first_root.left.right=heap2.first_root;
     	  HeapNode last2=heap2.first_root.left;
     	  heap2.first_root.left=this.first_root.left;
     	  last2.right=this.first_root;
@@ -141,12 +208,12 @@ public class FibonacciHeap
     * Return a counters array, where the value of the i-th entry is the number of trees of order i in the heap. 
     * 
     */
-    private int log2up(int x) {
-    	return (int)(Math.log(x)/Math.log(2));
+    private int fib_heap_size(int x) {
+    	return (int)(1.44*(Math.log(x)/Math.log(2)))+1;
     }
     public int[] countersRep()
     {
-    	int [] res=new int [(int)(1.44*log2up(this.size))+1];
+    	int [] res=new int [fib_heap_size(this.size())];
     	if (this.isEmpty()) {
     		return res;
     	}
