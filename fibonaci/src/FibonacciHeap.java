@@ -21,10 +21,7 @@ public class FibonacciHeap
 	 * creates a new list of roots
 	 * O(1)
 	 */	
-	
-	
-	
-	
+
 	public FibonacciHeap() {
 		this.num_of_roots=0;
 		this.min=null;
@@ -96,7 +93,7 @@ public class FibonacciHeap
     		original_child=original_child.child;
     	}
     	parent.rank++;
-    	
+    	this.total_links++;
     	
     }
 
@@ -243,13 +240,92 @@ public class FibonacciHeap
     *
     * The function decreases the key of the node x by delta. The structure of the heap should be updated
     * to reflect this chage (for example, the cascading cuts procedure should be applied if needed).
+    * O(1) amort
     */
     public void decreaseKey(HeapNode x, int delta)
     {    
-    	
-    	return; // should be replaced by student code
+    	if(x.getParent() == null) {
+    		x.setKey(x.getKey()-delta);
+    		return;
+    	}
+    	int n = x.getKey();
+    	x.setKey(n-delta);
+    	if(x.getKey()>x.getParent().getKey()) {
+    		return;
+    	}
+    	else {
+    		cut(x);
+    		cascadingCut(x);
+    		if(x.getKey()<this.min.getKey()) {
+    			this.min = x;
+    		}
+    	}
     }
-
+    /**
+     * public void cut(HeapNode node)
+     * The function cuts the node node from its location.
+     * @complexity O(1) 
+     * @pre none.
+     * @post the node is no longer linked to its parent
+     */
+    private void cut(HeapNode node){
+    	if(node.marked ){
+    		node.setMarked(false);
+    		this.marked_nodes-= 1;
+    	}
+    	this.removeNodeFromNodesList(node);
+    	this.merge_roots(node, this.first_root);
+    }
+    /**
+     * public void cascadingCut(HeapNode node)
+     * The function performs a cascading cut.
+     * @complexity - O(log(n)) amort
+     * @pre HeapNode node exists
+     * @post cascading cut was performed, if needed.
+     */
+    
+    public void cascadingCut(HeapNode node){
+    	HeapNode par = node.getParent()
+    	if(par!= null) { // node is not a root
+    		if(node.getMarked()) {
+    			node.setMarked(false);//mark the node we are cutting
+    			this.marked_nodes--;//update the field
+    			this.cut(node);//cut the node
+    			cascadingCut(par);//recursive call the the parent
+    		}
+    		else {
+    			node.setMarked(true);//mark the node
+    			this.marked_nodes++;//update the field
+    		}
+    	}
+    }
+    /**
+     * public void removeNodeFromNodesList(HeapNode node)
+     * The function removes the node from siblings linked list and from parent.
+     * @complexity - O(1)
+     * @pre HeapNode node exists
+     * @post HeapNode node is no longer linked to its siblings and parent.
+     */
+    public void removeNodeFromNodesList(HeapNode node){
+    	if(node.getParent()!= null){//if the node isn't a root
+        	this.total_cuts ++;//update the cutting field
+    		node.getParent().rank --;
+    		if(node.getParent().getChild() == node){
+    			if(node.getRight() == node){
+    				node.getParent().setChild(null);
+    			}else{
+    				node.getParent().setChild(node.getRight());
+    			}
+    		}
+    	}else{
+    		NumberOfTrees -= 1;
+    	}
+    	// fixing pointers of siblings
+    	node.right.left = node.left;
+    	node.left.right = node.right;
+    	// link the node to the roots list
+    	this.merge_roots(node, this.first_root);
+    }
    /**
     * public int potential() 
     *
@@ -269,21 +345,23 @@ public class FibonacciHeap
     * A link operation is the operation which gets as input two trees of the same rank, and generates a tree of 
     * rank bigger by one, by hanging the tree which has larger value in its root on the tree which has smaller value 
     * in its root.
+    * O(1)
     */
     public static int totalLinks()
     {    
-    	return 0; // should be replaced by student code
+    	return this.total_links;
     }
 
    /**
     * public static int totalCuts() 
     *
     * This static function returns the total number of cut operations made during the run-time of the program.
-    * A cut operation is the operation which diconnects a subtree from its parent (during decreaseKey/delete methods). 
+    * A cut operation is the operation which diconnects a subtree from its parent (during decreaseKey/delete methods).
+    * O(1) 
     */
     public static int totalCuts()
     {    
-    	return 0; // should be replaced by student code
+    	return this.total_cuts;
     }
 
      /**
