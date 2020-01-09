@@ -197,9 +197,12 @@ public class FibonacciHeap
     	  heap2.first_root.left=this.first_root.left;
     	  last2.right=this.first_root;
     	  this.first_root.left=last2;
+    	  //fields update
     	  this.size+=heap2.size();
     	  this.num_of_roots+=heap2.num_of_roots;
     	  this.marked_nodes+=heap2.marked_nodes;
+    	  this.total_cuts+=heap2.total_cuts;
+    	  this.total_links+=heap2.total_links;
     	  if (heap2.findMin().getKey()<this.min.getKey()) {//min pointer update
     		  this.min=heap2.findMin();
     	  }
@@ -289,7 +292,7 @@ public class FibonacciHeap
      * public void cut(HeapNode node)
      * The function cuts the node node from its location.
      * @complexity O(1) 
-     * @pre none.
+     * @pre node has parent
      * @post the node is no longer linked to its parent
      */
     private void cut(HeapNode node){
