@@ -9,12 +9,12 @@ import java.util.List;
 public class FibonacciHeap
 {
 	public HeapNode first_root;//list of the roots of the trees in the heap
-	public int num_of_roots;
+	public int num_of_roots; // num of trees in the heap. for the potential func
 	public HeapNode min;//pointer to the minimum node
-	public int size;
-	public int total_cuts;
-	public int total_links;
-	public int marked_nodes;
+	public int size;//for the size func
+	public int total_cuts;//for total cuts func
+	public int total_links;// for total links func
+	public int marked_nodes;// for the potential func
 	
 	/**
 	 * constructor of the heap
@@ -22,7 +22,7 @@ public class FibonacciHeap
 	 * O(1)
 	 */	
 
-	public FibonacciHeap() {
+	public FibonacciHeap() {//puts defaultic values to all the fields
 		this.num_of_roots=0;
 		this.min=null;
 		this.first_root=null;
@@ -50,20 +50,22 @@ public class FibonacciHeap
     * public HeapNode insert(int key)
     *
     * Creates a node (of type HeapNode) which contains the given key, and inserts it into the heap. 
+    * O(1)
     */
     public HeapNode insert(int key)
     {   
     	HeapNode node = new HeapNode(key);
-    	if(this.first_root==null) {
+    	if(this.first_root==null) {//checks if the heap is empty
     		this.first_root=node;
     		this.min=node;
     		this.first_root.left=this.first_root;
     		this.first_root.right=this.first_root;
     	}
     	else {
-    		if (key<this.min.key) {
+    		if (key<this.min.key) {//updates the min pointer
     			this.min=node;
     		}
+    		//pointers fix
     		HeapNode last=this.first_root.left;
     		last.right=node;
     		node.left=last;
@@ -71,20 +73,34 @@ public class FibonacciHeap
     		this.first_root.left=node;
     		this.first_root=node;
     	}
+    	//fields update
     	this.num_of_roots++;
     	this.size++;
     	return node;
     }
-    
-    public static void merge_roots(HeapNode root1, HeapNode root2) {
+    /**
+     *  public static void merge_roots(HeapNode root1, HeapNode root2)
+     *
+     * Merges lists of roots of trees. being used when cutting nodes
+     * @pre: roots are not null
+     * O(1)
+     */
+    public static void merge_roots(HeapNode root1, HeapNode root2) {//pointers fixing
     	root1.left.right=root2;
   	  HeapNode last2=root2.left;
   	  root2.left=root1.left;
   	  last2.right=root1;
   	  root1.left=last2;
     }
-    
+    /**
+     *  public static void link(HeapNode parent,HeapNode child)
+     *
+     * links 2 trees with rank K into one with rank K+1
+     * @pre: Nodes are not null and both trees ranked K
+     * O(1)
+     */
     public static void link(HeapNode parent,HeapNode child) {
+    	//needs to check which one is bigger
     	HeapNode original_child=parent.child;
     	parent.child=child;
     	child.parent=parent;
@@ -92,6 +108,7 @@ public class FibonacciHeap
     		merge_roots(child, original_child);
     		original_child=original_child.child;
     	}
+    	//fields update
     	parent.rank++;
     	this.total_links++;
     	
@@ -101,7 +118,7 @@ public class FibonacciHeap
     * public void deleteMin()
     *
     * Delete the node containing the minimum key.
-    *
+    * amort O(logn)
     */
     public void deleteMin()
     {
@@ -170,10 +187,11 @@ public class FibonacciHeap
     * public void meld (FibonacciHeap heap2)
     *
     * Meld the heap with heap2
-    *
+    * O(1)
     */
     public void meld (FibonacciHeap heap2)
     {
+    	  //pointers fix
     	  this.first_root.left.right=heap2.first_root;
     	  HeapNode last2=heap2.first_root.left;
     	  heap2.first_root.left=this.first_root.left;
@@ -182,7 +200,7 @@ public class FibonacciHeap
     	  this.size+=heap2.size();
     	  this.num_of_roots+=heap2.num_of_roots;
     	  this.marked_nodes+=heap2.marked_nodes;
-    	  if (heap2.findMin().getKey()<this.min.getKey()) {
+    	  if (heap2.findMin().getKey()<this.min.getKey()) {//min pointer update
     		  this.min=heap2.findMin();
     	  }
     	  
@@ -192,22 +210,28 @@ public class FibonacciHeap
     * public int size()
     *
     * Return the number of elements in the heap
-    *   
+    *   O(1)
     */
     public int size()
     {
-    	return this.size; // should be replaced by student code
+    	return this.size; 
     }
-    	
+    /**
+     * private int fib_heap_size(int x)
+     * @pre: x is the size
+     * returns the size of FIB heap according to the formula learned
+     * O(1)
+     */
+    private int fib_heap_size(int x) {
+    	return (int)(1.44*(Math.log(x)/Math.log(2)))+1;
+    }
     /**
     * public int[] countersRep()
     *
     * Return a counters array, where the value of the i-th entry is the number of trees of order i in the heap. 
-    * 
+    * amort O(logn)
     */
-    private int fib_heap_size(int x) {
-    	return (int)(1.44*(Math.log(x)/Math.log(2)))+1;
-    }
+    
     public int[] countersRep()
     {
     	int [] res=new int [fib_heap_size(this.size())];
@@ -219,19 +243,19 @@ public class FibonacciHeap
     	{
     		res[cur.rank]++;
     		cur=cur.right;
-    	}while (cur!=this.first_root);
-        return res; //	 to be replaced by student code
+    	}while (cur!=this.first_root);//runs on all the trees in the heap
+        return res; 
     }
 	
    /**
     * public void delete(HeapNode x)
     *
     * Deletes the node x from the heap. 
-    *
+    * amort O(logn) 
     */
     public void delete(HeapNode x) 
     {    
-    	this.decreaseKey(x, Integer.MIN_VALUE);
+    	this.decreaseKey(x, Integer.MIN_VALUE);//make the node the smallest in the heap
     	this.deleteMin();
     }
 
@@ -244,13 +268,13 @@ public class FibonacciHeap
     */
     public void decreaseKey(HeapNode x, int delta)
     {    
-    	if(x.getParent() == null) {
+    	if(x.getParent() == null) {// if the node is a root do nothing besides decreasing
     		x.setKey(x.getKey()-delta);
     		return;
     	}
     	int n = x.getKey();
     	x.setKey(n-delta);
-    	if(x.getKey()>x.getParent().getKey()) {
+    	if(x.getKey()>x.getParent().getKey()) {//see if a change needs to be done
     		return;
     	}
     	else {
@@ -273,8 +297,8 @@ public class FibonacciHeap
     		node.setMarked(false);
     		this.marked_nodes-= 1;
     	}
-    	this.removeNodeFromNodesList(node);
-    	this.merge_roots(node, this.first_root);
+    	this.removeNodeFromNodesList(node);//cut the node from the list
+    	this.merge_roots(node, this.first_root);//add the node as a root
     }
     /**
      * public void cascadingCut(HeapNode node)
@@ -332,10 +356,11 @@ public class FibonacciHeap
     * This function returns the current potential of the heap, which is:
     * Potential = #trees + 2*#marked
     * The potential equals to the number of trees in the heap plus twice the number of marked nodes in the heap. 
+    * O(1)
     */
     public int potential() 
     {    
-    	return ((this.num_of_roots)+(2*this.marked_nodes));
+    	return ((this.num_of_roots)+(2*this.marked_nodes)); // according to the formula learned in class
     }
 
    /**
@@ -366,14 +391,18 @@ public class FibonacciHeap
 
      /**
     * public static int[] kMin(FibonacciHeap H, int k) 
-    *
+    * @pre: H is binomial tree with rank deg(H), k<2^deg(H)
     * This static function returns the k minimal elements in a binomial tree H.
-    * The function should run in O(k(logk + deg(H)). 
+    * Complextity: O(k(logk + deg(H)). 
     */
     public static int[] kMin(FibonacciHeap H, int k)
     {    
-        int[] arr = new int[42];
-        return arr; // should be replaced by student code
+        int[] res = new int[k];
+        for(int i=0; i<k; i++) {
+        	res[i] = H.findMin().getKey();
+        	H.deleteMin();
+        }
+        return res; // should be replaced by student code
     }
     
    /**
