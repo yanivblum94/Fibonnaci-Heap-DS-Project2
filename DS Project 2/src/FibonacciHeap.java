@@ -102,15 +102,18 @@ public class FibonacciHeap
     public static void link(HeapNode parent,HeapNode child) {
     	//needs to check which one is bigger
     	HeapNode original_child=parent.child;
+    	HeapNode temp;
     	parent.child=child;
     	child.parent=parent;
     	while (original_child!=null) {
     		merge_roots(child, original_child);
-    		original_child=original_child.child;
+    		temp=original_child;
+    		original_child=temp.child;
+    		temp.child=null;
+    		child=child.child;
     	}
     	//fields update
     	parent.rank++;
-    	total_links++;
     	
     }
 
@@ -134,23 +137,43 @@ public class FibonacciHeap
     	if (this.first_root==this.min) {
     		this.first_root=this.first_root.right;
     	}
-    	min_child.parent=null;
     	//hop over
+    	this.min.right.left=this.min.left;
+    	this.min.left.right=this.min.right;
+    	
     	this.size--;
-    	merge_roots(this.first_root, min_child);
+    	if (min_child!=null)
+    		merge_roots(this.first_root, min_child);
+    	
+    	
+		
     	HeapNode [] consol= new HeapNode [fib_heap_size(this.size())];
     	HeapNode index=this.first_root;
     	HeapNode cur;
+    	int current_rank;
     	do {
-    		cur=index;
+    		cur=index.clone();
     		while (consol[cur.rank]!=null) {
-    			link(cur,consol[cur.rank]);//correct take minimum
-    			consol[cur.rank]=null;
+    			current_rank=cur.rank;
+    			if (cur.getKey()<consol[cur.rank].getKey()) {
+    				link(cur,consol[cur.rank]);//correct take minimum
+    			}
+    			else {
+    				link(consol[cur.rank],cur);//correct take minimum
+    				cur=consol[cur.rank];
+    			}
+    			consol[current_rank]=null;
+    			
+    			
     			this.total_links++;
     		}
+    		cur.left=cur;
+    		cur.right=cur;
     		consol[cur.rank]=cur;
     		index=index.right;
     	}while (index!=first_root);
+    	
+    	this.num_of_roots=0;
     	boolean first=true;
     	for (int i=0;i<consol.length;i++) {
     		if (consol[i]!=null) {
@@ -159,16 +182,20 @@ public class FibonacciHeap
     				this.first_root=consol[i];
     				first=false;
     				cur=consol[i];
+    				this.num_of_roots++;
     			}
     			else {
     				if (consol[i].key<this.min.key) {
     					this.min=consol[i];
     				}
     				cur.right=consol[i];
+    				cur.right.left=cur;
+    				this.num_of_roots++;
     			}
     		}
     	}
     	cur.right=this.first_root;
+    	this.first_root.left=cur;
      	
     }
 
@@ -392,44 +419,78 @@ public class FibonacciHeap
     	return total_cuts;
     }
 
+    /**
+     * public static int[] kMin(FibonacciHeap H, int k) 
+     * @pre: H is binomial tree with rank deg(H), k<2^deg(H)
+     * This static function returns the k minimal elements in a binomial tree H.
+     * Complextity: O(k(logk + deg(H)). 
+     */
+     public static int[] kMin(FibonacciHeap H, int k)
+     {    
+         int[] res = new int[k];
+         FibonacciHeap temp = new FibonacciHeap();
+         res[0] = H.min.getKey();
+         addChildrenToHeap(temp, H.findMin());
+         for(int i=1; i<k; i++) {
+         	res[1]=temp.findMin().getKey();
+         	HeapNode curr = temp.findMin().pointer;
+         	temp.deleteMin();
+         	addChildrenToHeap(temp, curr);
+         }
+         return res; 
+     }
+     
      /**
-    * public static int[] kMin(FibonacciHeap H, int k) 
-    * @pre: H is binomial tree with rank deg(H), k<2^deg(H)
-    * This static function returns the k minimal elements in a binomial tree H.
-    * Complextity: O(k(logk + deg(H)). 
-    */
-    public static int[] kMin(FibonacciHeap H, int k)
-    {    
-        int[] res = new int[k];
-        for(int i=0; i<k; i++) {
-        	res[i] = H.findMin().getKey();
-        	H.deleteMin();
-        }
-        return res; // should be replaced by student code
+      * private static void addChildrenToHeap(FibonacciHeap hp, HeapNode node)
+      * staitc func that receives a node and a heap and inserts all the children of the node to the heap
+      * O(deg(node))
+      */
+     
+    private static void addChildrenToHeap(FibonacciHeap hp, HeapNode node) {
+ 	   if(node.getChild()==null) {//the empty case
+ 		   return;
+ 	   }
+ 	   HeapNode child = node.getChild();
+ 	   HeapNode curr = node.getChild();
+ 	   do {
+ 		   hp.insert(curr.getKey()).pointer=curr;
+ 		   curr=curr.getRight();
+ 	   }
+ 	   while(curr.getRight()!=child);//check if I still have kids in the "level" not in the Heap
     }
-    
-   /**
-    * public class HeapNode
-    * 
-    * If you wish to implement classes other than FibonacciHeap
-    * (for example HeapNode), do it in this file, not in 
-    * another file 
-    *  
-    */
-    public class HeapNode{
+    /**
+     * public class HeapNode
+     * 
+     * If you wish to implement classes other than FibonacciHeap
+     * (for example HeapNode), do it in this file, not in 
+     * another file 
+     *  
+     */
+     public class HeapNode{
 
-	public int key; //node key
-	public boolean marked; //marks if the node lost a child
-	public HeapNode child, parent, left, right;//pointers to nodes neighbors
-	public int rank;
+ 	public int key; //node key
+ 	public boolean marked; //marks if the node lost a child
+ 	public HeapNode child, parent, left, right;//pointers to nodes neighbors
+ 	public int rank;
+ 	public HeapNode pointer;//for Kmin
 
-  	public HeapNode(int key) {
-  		//constructor' O(1)
-	    this.key = key;
-	    this.marked = false;
-	    this.rank=0;
-	    this.parent=null;
-	    this.child=null;
+   	public HeapNode(int key) {
+   		//constructor' O(1)
+ 	    this.key = key;
+ 	    this.marked = false;
+ 	    this.rank=0;
+ 	    this.parent=null;
+ 	    this.child=null;
+ 	    this.pointer = null;
+       }
+  	
+  	public HeapNode clone() {
+  		HeapNode cloned =new HeapNode(this.key);
+  		cloned.marked = this.marked;
+  		cloned.rank=this.rank;
+  		cloned.parent=this.parent;
+  		cloned.child=this.child;
+  		return cloned;
       }
 
   	public int getKey() {//O(1)
