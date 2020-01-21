@@ -27,8 +27,8 @@ public class FibonacciHeap
 		this.min=null;
 		this.first_root=null;
 		this.size=0;
-		this.total_links=0;
-		this.total_cuts=0;
+		FibonacciHeap.total_links=0;
+		FibonacciHeap.total_cuts=0;
 		this.marked_nodes=0;
 	}
 
@@ -115,6 +115,7 @@ public class FibonacciHeap
     	//fields update
     	parent.rank++;
     	
+    	
     }
 
    /**
@@ -165,7 +166,7 @@ public class FibonacciHeap
     			consol[current_rank]=null;
     			
     			
-    			this.total_links++;
+    			FibonacciHeap.total_links++;
     		}
     		cur.left=cur;
     		cur.right=cur;
@@ -228,8 +229,8 @@ public class FibonacciHeap
     	  this.size+=heap2.size();
     	  this.num_of_roots+=heap2.num_of_roots;
     	  this.marked_nodes+=heap2.marked_nodes;
-    	  this.total_cuts+=heap2.total_cuts;
-    	  this.total_links+=heap2.total_links;
+    	  FibonacciHeap.total_cuts+=FibonacciHeap.total_cuts;
+    	  FibonacciHeap.total_links+=FibonacciHeap.total_links;
     	  if (heap2.findMin().getKey()<this.min.getKey()) {//min pointer update
     		  this.min=heap2.findMin();
     	  }
@@ -304,7 +305,7 @@ public class FibonacciHeap
     	}
     	int n = x.getKey();
     	x.setKey(n-delta);
-    	if(x.getKey()>x.getParent().getKey()) {//see if a change needs to be done
+    	if(x.getKey()<x.getParent().getKey()) {//see if a change needs to be done
     		return;
     	}
     	else {
@@ -328,6 +329,7 @@ public class FibonacciHeap
     		this.marked_nodes-= 1;
     	}
     	this.removeNodeFromNodesList(node);//cut the node from the list
+    	FibonacciHeap.total_cuts ++;//update the cutting field
     	this.merge_roots(node, this.first_root);//add the node as a root
     }
     /**
@@ -362,7 +364,6 @@ public class FibonacciHeap
      */
     public void removeNodeFromNodesList(HeapNode node){
     	if(node.getParent()!= null){//if the node isn't a root
-        	this.total_cuts ++;//update the cutting field
     		node.getParent().rank --;
     		if(node.getParent().getChild() == node){
     			if(node.getRight() == node){

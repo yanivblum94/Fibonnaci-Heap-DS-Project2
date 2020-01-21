@@ -13,7 +13,7 @@ public class FibonacciTester {
 		fh.deleteMin();
 		Random rnd = new Random();
 		for(int j=0; j<arg-1; j++) {
-			int index = (int) (m*Math.pow(0.5, j) +2);
+			int index = (int) (m*Math.pow(0.5, j));
 			int delta = rnd.nextInt(m);
 			fh.decreaseKey(arr[index], delta);
 			System.out.println("m = " + index);
