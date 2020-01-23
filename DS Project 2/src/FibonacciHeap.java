@@ -1,5 +1,7 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * FibonacciHeap
@@ -82,7 +84,7 @@ public class FibonacciHeap
      *  public static void merge_roots(HeapNode root1, HeapNode root2)
      *
      * Merges lists of roots of trees. being used when cutting nodes
-     * @pre: roots are not null
+     * @pre nodes aren't null
      * O(1)
      */
     public static void merge_roots(HeapNode root1, HeapNode root2) {//pointers fixing
@@ -102,16 +104,11 @@ public class FibonacciHeap
     public static void link(HeapNode parent,HeapNode child) {
     	//needs to check which one is bigger
     	HeapNode original_child=parent.child;
-    	HeapNode temp;
     	parent.child=child;
     	child.parent=parent;
-    	while (original_child!=null) {
+    	if (original_child!=null)
     		merge_roots(child, original_child);
-    		temp=original_child;
-    		original_child=temp.child;
-    		temp.child=null;
-    		child=child.child;
-    	}
+
     	//fields update
     	parent.rank++;
     	
@@ -130,30 +127,45 @@ public class FibonacciHeap
     		return;
     	}
     	if (this.num_of_roots==1) {
-    		this.first_root=null;
-    		this.min=null;
-    		this.size=0;
+    		if (this.first_root.child==null)
+    			{
+    				first_root=null;
+    				return;
+    			}
+    		else{
+    			this.first_root=this.first_root.child;
+    			this.first_root.parent=null;
+    		}
+    		
     	}
-    	HeapNode min_child=min.child;
-    	if (this.first_root==this.min) {
-    		this.first_root=this.first_root.right;
+    	else {
+    		HeapNode min_child=this.min.child;
+        	if (this.first_root==this.min) {
+        		this.first_root=this.first_root.right;
+        	}
+        	//hop over
+        	this.min.right.left=this.min.left;
+        	this.min.left.right=this.min.right;
+        	
+        	
+        	if (min_child!=null)
+        		merge_roots(this.first_root, min_child);
     	}
-    	//hop over
-    	this.min.right.left=this.min.left;
-    	this.min.left.right=this.min.right;
-    	
     	this.size--;
-    	if (min_child!=null)
-    		merge_roots(this.first_root, min_child);
+    	
     	
     	
 		
     	HeapNode [] consol= new HeapNode [fib_heap_size(this.size())];
     	HeapNode index=this.first_root;
     	HeapNode cur;
+    	HeapNode next;
     	int current_rank;
+    	cur=index;
     	do {
-    		cur=index.clone();
+    		next=cur.right;
+    		cur.right=cur;
+    		cur.left=cur;
     		while (consol[cur.rank]!=null) {
     			current_rank=cur.rank;
     			if (cur.getKey()<consol[cur.rank].getKey()) {
@@ -164,15 +176,14 @@ public class FibonacciHeap
     				cur=consol[cur.rank];
     			}
     			consol[current_rank]=null;
-    			
-    			
     			FibonacciHeap.total_links++;
     		}
     		cur.left=cur;
     		cur.right=cur;
     		consol[cur.rank]=cur;
-    		index=index.right;
-    	}while (index!=first_root);
+    		cur=next;
+    		
+    	}while (cur!=first_root);
     	
     	this.num_of_roots=0;
     	boolean first=true;
@@ -191,6 +202,7 @@ public class FibonacciHeap
     				}
     				cur.right=consol[i];
     				cur.right.left=cur;
+    				cur=cur.right;
     				this.num_of_roots++;
     			}
     		}
@@ -210,6 +222,7 @@ public class FibonacciHeap
     {
     	return this.min;
     } 
+
     
    /**
     * public void meld (FibonacciHeap heap2)
@@ -301,11 +314,14 @@ public class FibonacciHeap
     {    
     	if(x.getParent() == null) {// if the node is a root do nothing besides decreasing
     		x.setKey(x.getKey()-delta);
+    		if(x.getKey()<this.min.getKey()) {
+    			this.min=x;
+    		}
     		return;
     	}
     	int n = x.getKey();
     	x.setKey(n-delta);
-    	if(x.getKey()<x.getParent().getKey()) {//see if a change needs to be done
+    	if(x.getKey()>x.getParent().getKey()) {//see if a change needs to be done
     		return;
     	}
     	else {
@@ -314,7 +330,7 @@ public class FibonacciHeap
     		if(x.getKey()<this.min.getKey()) {
     			this.min = x;
     		}
-    	}
+    }
     }
     /**
      * public void cut(HeapNode node)
@@ -428,15 +444,20 @@ public class FibonacciHeap
      */
      public static int[] kMin(FibonacciHeap H, int k)
      {    
+    	 if(k==0) {
+    		 return new int[0];
+    	 }
          int[] res = new int[k];
+         Map<Integer, HeapNode> nodesMap = new HashMap<Integer, FibonacciHeap.HeapNode>();//to keep pointers to original heap
          FibonacciHeap temp = new FibonacciHeap();
          res[0] = H.min.getKey();
-         addChildrenToHeap(temp, H.findMin());
+         addChildrenToHeap(temp, H.findMin(),nodesMap);
+         FiboHeapPrinter.Print(temp);
          for(int i=1; i<k; i++) {
-         	res[1]=temp.findMin().getKey();
-         	HeapNode curr = temp.findMin().pointer;
+         	res[i]=temp.findMin().getKey();
+         	HeapNode curr = nodesMap.get(res[i]);
          	temp.deleteMin();
-         	addChildrenToHeap(temp, curr);
+         	addChildrenToHeap(temp, curr, nodesMap);
          }
          return res; 
      }
@@ -444,20 +465,26 @@ public class FibonacciHeap
      /**
       * private static void addChildrenToHeap(FibonacciHeap hp, HeapNode node)
       * staitc func that receives a node and a heap and inserts all the children of the node to the heap
-      * O(deg(node))
+      * O(deg(node)) - in expecteed
       */
      
-    private static void addChildrenToHeap(FibonacciHeap hp, HeapNode node) {
+    private static void addChildrenToHeap(FibonacciHeap hp, HeapNode node, Map<Integer, HeapNode> map) {
  	   if(node.getChild()==null) {//the empty case
  		   return;
  	   }
  	   HeapNode child = node.getChild();
  	   HeapNode curr = node.getChild();
  	   do {
- 		   hp.insert(curr.getKey()).pointer=curr;
+ 		   hp.insert(curr.getKey());
+ 		   map.put(curr.getKey(), curr);
  		   curr=curr.getRight();
+ 		   
  	   }
  	   while(curr.getRight()!=child);//check if I still have kids in the "level" not in the Heap
+ 	   if(!map.containsKey(curr.getKey())) {//add the "rightest" child
+ 	  hp.insert(curr.getKey());
+	  map.put(curr.getKey(), curr);
+ 	   }
     }
     /**
      * public class HeapNode
@@ -473,7 +500,6 @@ public class FibonacciHeap
  	public boolean marked; //marks if the node lost a child
  	public HeapNode child, parent, left, right;//pointers to nodes neighbors
  	public int rank;
- 	public HeapNode pointer;//for Kmin
 
    	public HeapNode(int key) {
    		//constructor' O(1)
@@ -482,18 +508,10 @@ public class FibonacciHeap
  	    this.rank=0;
  	    this.parent=null;
  	    this.child=null;
- 	    this.pointer = null;
+ 	    this.right = this;
+ 	    this.left = this;
        }
   	
-  	public HeapNode clone() {
-  		HeapNode cloned =new HeapNode(this.key);
-  		cloned.marked = this.marked;
-  		cloned.rank=this.rank;
-  		cloned.parent=this.parent;
-  		cloned.child=this.child;
-  		return cloned;
-      }
-
   	public int getKey() {//O(1)
 	    return this.key;
       }
@@ -506,7 +524,7 @@ public class FibonacciHeap
   	public HeapNode getParent() {//O(1)
   		return this.parent;
   	}
-  	public HeapNode getLefy() {//O(1)
+  	public HeapNode getLeft() {//O(1)
   		return this.left;
   	}
   	public HeapNode getRight() {//O(1)

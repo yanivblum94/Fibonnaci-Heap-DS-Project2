@@ -28,7 +28,7 @@ public class FiboHeapPrinter {
 						int spacesBefore = spacesBeforeKey.get(node.getKey());
 						if (firstChild) {
 							addSpaces(builderTop, spacesBefore - spacesConnectorLine, ' ');
-							FibonacciHeap.HeapNode lastChild = node.getLefy();
+							FibonacciHeap.HeapNode lastChild = node.getLeft();
 							int lastChildSpacesBefore = spacesBeforeKey.get(lastChild.getKey());
 							builderTop.append("|");
 
