@@ -45,7 +45,10 @@ public class FibonacciHeap
     */
     public boolean isEmpty()
     {
-    	return (this.num_of_roots==0);
+    	if(this.findMin().getKey()==-1) {
+    		return true;
+    	}
+    	return false;
     }
 		
    /**
@@ -130,6 +133,7 @@ public class FibonacciHeap
     		if (this.first_root.child==null)
     			{
     				first_root=null;
+    				this.min = null;
     				return;
     			}
     		else{
@@ -220,6 +224,9 @@ public class FibonacciHeap
     */
     public HeapNode findMin()
     {
+    	if(this.min ==null) {
+    		return new HeapNode(-1);
+    	}
     	return this.min;
     } 
 
@@ -452,7 +459,7 @@ public class FibonacciHeap
          FibonacciHeap temp = new FibonacciHeap();
          res[0] = H.min.getKey();
          addChildrenToHeap(temp, H.findMin(),nodesMap);
-         FiboHeapPrinter.Print(temp);
+        // FiboHeapPrinter.Print(temp);
          for(int i=1; i<k; i++) {
          	res[i]=temp.findMin().getKey();
          	HeapNode curr = nodesMap.get(res[i]);
